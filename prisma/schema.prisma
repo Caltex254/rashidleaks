@@ -1,0 +1,624 @@
+// RASHID LEAKS - Adult Video Sharing Platform Database Schema
+// Production-ready schema with full relationship support
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== USER & AUTHENTICATION ====================
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  email         String    @unique
+  passwordHash  String
+  dateOfBirth   DateTime?
+  country       String?
+  role          UserRole  @default(USER)
+  
+  // Profile
+  avatar        String?
+  bio           String?
+  displayName   String?
+  
+  // Verification & Status
+  emailVerified     Boolean @default(false)
+  emailVerificationToken String?
+  emailVerifiedAt   DateTime?
+  isBanned          Boolean @default(false)
+  banReason         String?
+  bannedAt          DateTime?
+  
+  // Age Gate
+  ageVerified       Boolean @default(false)
+  ageVerifiedAt     DateTime?
+  ageVerificationIp String?
+  
+  // Settings
+  privacySettings  Json? // { profileVisible: boolean, showWatchHistory: boolean, etc }
+  notificationSettings Json? // { emailNotifications: boolean, pushNotifications: boolean }
+  
+  // Security
+  lastLoginAt       DateTime?
+  lastLoginIp       String?
+  failedLoginAttempts Int @default(0)
+  lockedUntil       DateTime?
+  passwordChangedAt DateTime @default(now())
+  twoFactorEnabled  Boolean @default(false)
+  twoFactorSecret   String?
+  
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  creatorProfile    CreatorProfile?
+  videos            Video[]
+  comments          Comment[]
+  likes             Like[]
+  favorites         Favorite[]
+  followsFollowing  Follow[] @relation("Following")
+  followsFollower   Follow[] @relation("Follower")
+  reports           Report[]
+  sessions          Session[]
+  auditLogs         AuditLog[]
+  verificationRecord VerificationRecord?
+  takedownRequests  TakedownRequest[]
+  watchHistory      WatchHistory[]
+  moderationActions ModerationAction[]
+  
+  @@index([email])
+  @@index([username])
+  @@index([role])
+  @@index([isBanned])
+}
+
+enum UserRole {
+  USER
+  CREATOR
+  MODERATOR
+  ADMIN
+}
+
+// ==================== CREATOR VERIFICATION ====================
+
+model CreatorProfile {
+  id                String              @id @default(cuid())
+  userId            String              @unique
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Profile Info
+  bannerImage       String?
+  verifiedAt        DateTime?
+  verificationStatus VerificationStatus @default(PENDING)
+  rejectionReason   String?
+  
+  // Stats
+  followerCount     Int                 @default(0)
+  videoCount         Int                 @default(0)
+  totalViews         Int                 @default(0)
+  totalLikes         Int                 @default(0)
+  
+  // Consent Agreements (required before uploading)
+  consentAdultConfirmed      Boolean @default(false)
+  consentOwnershipConfirmed  Boolean @default(false)
+  consentAllParticipantsAdult Boolean @default(false)
+  consentRecordingConfirmed  Boolean @default(false)
+  consentDistributionConfirmed Boolean @default(false)
+  consentConfirmedAt         DateTime?
+  
+  // Payment/Business (optional for future use)
+  paymentInfo       Json? // Encrypted payment details
+  taxInfo           Json? // Tax information
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([verificationStatus])
+  @@index([followerCount])
+}
+
+enum VerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+// ==================== CONTENT MODELS ====================
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?  // Icon name or URL
+  thumbnail   String?
+  isFeatured  Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  
+  videos      Video[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([slug])
+  @@index([isFeatured])
+  @@index([sortOrder])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  
+  videos    VideoTag[]
+  
+  createdAt DateTime @default(now())
+  
+  @@index([name])
+  @@index([slug])
+}
+
+model Video {
+  id                  String           @id @default(cuid())
+  title               String
+  description         String?
+  slug                String           @unique
+  
+  // Creator
+  creatorId           String
+  creator             User             @relation(fields: [creatorId], references: [id])
+  
+  // Category & Tags
+  categoryId          String
+  category            Category         @relation(fields: [categoryId], references: [id])
+  tags                VideoTag[]
+  
+  // Media Files
+  videoUrl            String           // Main video file or HLS manifest
+  thumbnailUrl        String?
+  thumbnailBlurHash   String?          // For blur placeholder
+  
+  // Video Properties
+  duration            Int?             // Duration in seconds
+  width               Int?             // Video width
+  height              Int?             // Video height
+  fileSize            BigInt?          // File size in bytes
+  format              String?          // mp4, webm, hls, etc.
+  
+  // Quality Options (for adaptive streaming)
+  qualityOptions      Json?            // [{ quality: '1080p', url: '...', size: ... }]
+  
+  // Stats
+  viewCount           Int              @default(0)
+  likeCount           Int              @default(0)
+  favoriteCount       Int              @default(0)
+  commentCount        Int              @default(0)
+  
+  // Moderation
+  moderationStatus    ModerationStatus @default(PENDING)
+  moderatedAt         DateTime?
+  moderatedBy         String?          // User ID of moderator
+  moderationNotes     String?
+  flaggedReasons      String?          // JSON array of flag reasons
+  
+  // Visibility
+  visibility          VideoVisibility  @default(PUBLIC)
+  publishedAt         DateTime?
+  
+  // Content Warnings
+  contentWarnings     String?          // JSON array of warnings
+  isExplicit          Boolean          @default(true) // Always true for this platform
+  
+  // Timestamps
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  
+  // Relations
+  comments            Comment[]
+  likes               Like[]
+  favorites           Favorite[]
+  reports             Report[]
+  takedownRequests    TakedownRequest[]
+  featuredIn          FeaturedVideo[]
+  
+  @@index([creatorId])
+  @@index([categoryId])
+  @@index([moderationStatus])
+  @@index([visibility])
+  @@index([publishedAt])
+  @@index([viewCount])
+  @@index([slug])
+  @@index([title])
+}
+
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+  FLAGGED
+  UNDER_REVIEW
+}
+
+enum VideoVisibility {
+  DRAFT
+  PRIVATE
+  UNLISTED
+  PUBLIC
+  SCHEDULED
+}
+
+model VideoTag {
+  videoId    String
+  video      Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  tagId      String
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@id([videoId, tagId])
+}
+
+// ==================== ENGAGEMENT MODELS ====================
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  
+  parentId  String?  // For nested replies
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  
+  // Moderation
+  isDeleted Boolean  @default(false)
+  deletedAt DateTime?
+  isFlagged  Boolean  @default(false)
+  
+  // Stats
+  likeCount Int      @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([videoId])
+  @@index([userId])
+  @@index([parentId])
+  @@index([createdAt])
+}
+
+model Like {
+  videoId   String
+  video     Video   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  @@id([videoId, userId])
+  @@index([userId])
+}
+
+model Favorite {
+  videoId   String
+  video     Video   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  @@id([videoId, userId])
+  @@index([userId])
+}
+
+model Follow {
+  followingId String  // The user being followed
+  following   User    @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  followerId  String  // The user who follows
+  follower    User    @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  
+  @@id([followingId, followerId])
+  @@index([followerId])
+}
+
+// ==================== MODERATION & SAFETY ====================
+
+model Report {
+  id          String       @id @default(cuid())
+  reporterId  String?
+  reporter    User?        @relation(fields: [reporterId], references: [id])
+  videoId     String
+  video       Video        @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  
+  reason      ReportReason
+  description String?
+  evidence    String?      // URLs or additional info
+  email       String?      // For anonymous reporters
+  status      ReportStatus @default(PENDING)
+  
+  // Case Management
+  caseId      String       @unique @default(cuid())
+  assignedTo  String?      // Moderator ID
+  reviewedAt  DateTime?
+  decision    String?      // Approved/Rejected with notes
+  actionTaken String?      // What action was taken
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  @@index([reporterId])
+  @@index([videoId])
+  @@index([status])
+  @@index([reason])
+}
+
+enum ReportReason {
+  NON_CONSENSUAL
+  COPYRIGHT
+  PRIVACY_VIOLATION
+  ILLEGAL_CONTENT
+  AGE_CONCERN
+  VIOLENCE
+  SPAM
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+  ESCALATED
+}
+
+model TakedownRequest {
+  id          String           @id @default(cuid())
+  requesterName     String
+  requesterEmail    String
+  requesterRole     String? // Copyright owner, subject, legal representative, etc.
+  videoId           String?
+  video             Video?           @relation(fields: [videoId], references: [id])
+  url               String?          // Direct URL to content
+  reason            TakedownReason
+  description       String
+  legalReference    String? // DMCA notice, court order, etc.
+  evidence          String?          // Supporting documentation URLs
+  status            TakedownStatus   @default(PENDING)
+  
+  // Case Management
+  caseId            String           @unique @default(cuid())
+  assignedTo        String?
+  reviewedAt        DateTime?
+  decision          String?
+  actionTaken       String?
+  responseToRequester String?
+  
+  userId            String?
+  user              User?            @relation(fields: [userId], references: [id])
+  
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  
+  @@index([status])
+  @@index([requesterEmail])
+  @@index([videoId])
+}
+
+enum TakedownReason {
+  COPYRIGHT_INFRINGEMENT
+  NON_CONSENSUAL_INTIMATE_IMAGERY
+  PRIVACY_VIOLATION
+  ILLEGAL_CONTENT
+  COURT_ORDER
+  VIOLATION_OF_TERMS
+  OTHER
+}
+
+enum TakedownStatus {
+  PENDING
+  UNDER_REVIEW
+  PROCESSING
+  COMPLETED
+  DISMISSED
+  COUNTER_NOTICE
+}
+
+// ==================== VERIFICATION RECORDS ====================
+
+model VerificationRecord {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // ID Verification
+  idType      String?  // passport, drivers_license, national_id
+  idNumberHash String? // Hashed for security
+  idDocumentUrl String? // Encrypted storage reference
+  idSelfieUrl  String? // Selfie with ID
+  idVerified   Boolean @default(false)
+  idVerifiedAt DateTime?
+  
+  // Age Verification
+  ageDocumentUrl String?
+  ageVerified   Boolean @default(false)
+  ageVerifiedAt DateTime?
+  ageMethod     String? // document, credit_card, third_party
+  
+  // Creator-Specific
+  consentFormUrl String?
+  sampleContentUrl String? // For verification of ownership
+  socialMediaLinks String? // JSON array
+  
+  // Review
+  reviewNotes  String?
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  status       VerificationStatus @default(PENDING)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([status])
+  @@index([userId])
+}
+
+// ==================== ADMIN & AUDIT ====================
+
+model ModerationAction {
+  id          String           @id @default(cuid())
+  moderatorId String
+  moderator   User             @relation(fields: [moderatorId], references: [id])
+  targetType  ModerationTargetType
+  targetId    String
+  actionType  ModerationActionType
+  reason      String
+  details     String?          // JSON with additional context
+  previousValue String?        // Previous state for audit
+  newValue    String?          // New state after action
+  
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime         @default(now())
+  
+  @@index([moderatorId])
+  @@index([targetType])
+  @@index([targetId])
+  @@index([actionType])
+  @@index([createdAt])
+}
+
+enum ModerationTargetType {
+  VIDEO
+  COMMENT
+  USER
+  CREATOR
+  REPORT
+  TAG
+  CATEGORY
+}
+
+enum ModerationActionType {
+  APPROVE
+  REJECT
+  HIDE
+  DELETE
+  FLAG
+  UNFLAG
+  BAN_USER
+  UNBAN_USER
+  SUSPEND_CREATOR
+  VERIFY_CREATOR
+  REVOKE_VERIFICATION
+  REQUEST_CHANGES
+  ADD_WARNING
+  NOTE_ONLY
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?  // Null for system actions
+  user        User?    @relation(fields: [userId], references: [id])
+  action      String   // e.g., "user.login", "video.upload", "comment.create"
+  resourceType String? // e.g., "Video", "User", "Comment"
+  resourceId   String?
+  details     String?  // JSON string with additional context
+  ipAddress   String?
+  userAgent   String?
+  success     Boolean  @default(true)
+  errorMessage String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([resourceId])
+  @@index([createdAt])
+  @@index([success])
+}
+
+// ==================== SESSIONS ====================
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique // Session token (hashed)
+  
+  // Device Info
+  deviceType   String?  // mobile, tablet, desktop
+  os           String?
+  browser      String?
+  ipAddress    String?
+  userAgent    String?
+  
+  // Status
+  isActive     Boolean  @default(true)
+  lastActivity DateTime @default(now())
+  expiresAt    DateTime
+  
+  createdAt    DateTime @default(now())
+  
+  @@index([userId])
+  @@index([token])
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+// ==================== FEATURED & CURATED CONTENT ====================
+
+model FeaturedVideo {
+  id        String   @id @default(cuid())
+  videoId   String   @unique
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  title     String?  // Override title if needed
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  featuredAt DateTime @default(now())
+  expiresAt DateTime?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([isActive])
+  @@index([sortOrder])
+  @@index([featuredAt])
+}
+
+// ==================== WATCH HISTORY ====================
+
+model WatchHistory {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoId   String
+  watchedAt DateTime @default(now())
+  
+  // Progress
+  progress  Int      @default(0) // Seconds watched
+  completed Boolean  @default(false)
+  
+  @@id([userId, videoId])
+  @@index([userId])
+  @@index([watchedAt])
+}
+
+// ==================== RATE LIMITING ====================
+
+model RateLimit {
+  identifier String  // IP address or user ID
+  action    String   // e.g., "login_attempt", "upload", "comment"
+  attempts  Int      @default(0)
+  windowStart DateTime @default(now())
+  
+  @@id([identifier, action])
+  @@index([windowStart])
+}
