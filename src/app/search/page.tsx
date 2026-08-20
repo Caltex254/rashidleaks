@@ -74,7 +74,7 @@ const DURATION_OPTIONS = [
   { value: 'long', label: 'Over 30 min' },
 ];
 
-export default function SearchContent() {
+function SearchContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   
