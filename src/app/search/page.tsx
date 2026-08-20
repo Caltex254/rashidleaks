@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search as SearchIcon, SlidersHorizontal, X, Grid3X3, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -74,7 +74,7 @@ const DURATION_OPTIONS = [
   { value: 'long', label: 'Over 30 min' },
 ];
 
-export default function SearchPage() {
+export default function SearchContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   
@@ -376,5 +376,13 @@ export default function SearchPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">Loading search...</div>}>
+      <SearchContent />
+    </Suspense>
   );
 }
