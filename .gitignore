@@ -56,3 +56,4 @@ dev.log
 # Temporary files
 tmp/
 temp/
+.env*
