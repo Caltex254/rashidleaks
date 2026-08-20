@@ -12,7 +12,6 @@ import {
   MapPin,
   Link as LinkIcon,
   CheckCircle2,
-  VideoGrid,
   Users,
   Heart,
   Eye
