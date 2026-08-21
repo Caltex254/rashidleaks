@@ -5,7 +5,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { signIn, useSession } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { useAuthStore } from '@/lib/store';
 
@@ -14,7 +14,6 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const { setUser } = useAuthStore();
-  const { data: session } = useSession();
   
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(
