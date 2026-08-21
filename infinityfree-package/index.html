@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=yes">
+    <title>RASHID LEAKS - Premium Adult Video Platform</title>
+    <meta name="description" content="RASHID LEAKS is a premium adult video-sharing platform. Watch, upload, and discover adult content in a safe, moderated environment. 18+ only.">
+    <meta name="theme-color" content="#0f0f0f">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='url(%23gradient)'/><text x='50' y='70' font-size='50' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>RL</text><defs><linearGradient id='gradient' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:%23ef4444'/><stop offset='100%' style='stop-color:%23ec4899'/></linearGradient></defs></svg>">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-[#0f0f0f] text-white min-h-screen">
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-background">
+            <div class="splash-orb orb-1"></div>
+            <div class="splash-orb orb-2"></div>
+            <div class="splash-orb orb-3"></div>
+            <div class="splash-grid"></div>
+        </div>
+        
+        <div class="splash-content">
+            <div class="logo-container">
+                <div class="logo-glow"></div>
+                <div class="logo-main">
+                    <div class="logo-inner"></div>
+                    <div class="logo-text">18+</div>
+                    <div class="logo-corner tl"></div>
+                    <div class="logo-corner tr"></div>
+                    <div class="logo-corner bl"></div>
+                    <div class="logo-corner br"></div>
+                </div>
+                <div class="logo-ring"></div>
+            </div>
+            
+            <h1 class="brand-name">
+                <span class="gradient-text">RASHID LEAKS</span>
+            </h1>
+            
+            <p class="tagline">Premium Adult Video Platform</p>
+            
+            <div class="loading-indicator">
+                <div class="loading-dots">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <span class="loading-text">Loading...</span>
+            </div>
+            
+            <div class="warning-badge">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                ADULT CONTENT • 18+ ONLY
+            </div>
+        </div>
+    </div>
+
+    <!-- Age Gate Modal -->
+    <div id="age-gate" class="age-gate hidden">
+        <div class="age-gate-overlay"></div>
+        <div class="age-gate-content">
+            <div class="age-gate-icon">🔞</div>
+            <h2>Age Verification Required</h2>
+            <p>This website contains age-restricted content. You must be at least 18 years old to enter.</p>
+            <div class="age-gate-buttons">
+                <button onclick="verifyAge(true)" class="btn-primary btn-enter">I am 18+ - Enter</button>
+                <button onclick="verifyAge(false)" class="btn-secondary btn-exit">I am under 18 - Exit</button>
+            </div>
+            <p class="age-disclaimer">By entering, you confirm that you are at least 18 years old and agree to our Terms of Service.</p>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" class="app-container hidden">
+        <!-- Header -->
+        <header id="header" class="header">
+            <div class="header-content">
+                <a href="/" class="logo-link">
+                    <div class="header-logo">
+                        <span>RL</span>
+                    </div>
+                    <span class="header-brand">RASHID LEAKS</span>
+                </a>
+                
+                <nav class="nav-desktop">
+                    <a href="/" class="nav-link active">Home</a>
+                    <a href="#trending" class="nav-link">Trending</a>
+                    <a href="#categories" class="nav-link">Categories</a>
+                    <a href="#creators" class="nav-link">Creators</a>
+                </nav>
+                
+                <div class="header-actions">
+                    <button onclick="openSearch()" class="icon-btn" aria-label="Search">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </button>
+                    <div id="auth-buttons">
+                        <button onclick="showAuthModal('login')" class="btn-header-login">Sign In</button>
+                        <button onclick="showAuthModal('register')" class="btn-header-register">Register</button>
+                    </div>
+                    <div id="user-menu" class="hidden">
+                        <button onclick="toggleUserDropdown()" class="user-avatar-btn">
+                            <div class="user-avatar-sm" id="user-avatar-header">A</div>
+                        </button>
+                        <div id="user-dropdown" class="dropdown-menu hidden">
+                            <a href="/account" class="dropdown-item">My Account</a>
+                            <a href="#" onclick="if(isAdmin()){window.location.href='/admin'}else{return false;}" class="dropdown-item" id="admin-link">Admin Panel</a>
+                            <a href="#" onclick="logout()" class="dropdown-item text-red-400">Sign Out</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="toggleMobileMenu()" class="mobile-menu-btn" aria-label="Menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="mobile-menu hidden">
+            <div class="mobile-menu-content">
+                <a href="/" class="mobile-nav-link">Home</a>
+                <a href="#trending" class="mobile-nav-link">Trending</a>
+                <a href="#categories" class="mobile-nav-link">Categories</a>
+                <a href="#creators" class="mobile-nav-link">Creators</a>
+                <hr class="mobile-divider">
+                <div id="mobile-auth-buttons">
+                    <button onclick="showAuthModal('login'); closeMobileMenu();" class="mobile-auth-btn">Sign In</button>
+                    <button onclick="showAuthModal('register'); closeMobileMenu();" class="mobile-auth-btn primary">Register</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main id="main-content" class="main-content">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <div class="hero-bg"></div>
+                <div class="container">
+                    <div class="hero-content">
+                        <a href="/" class="hero-logo">
+                            <div class="hero-logo-icon">
+                                <span>RL</span>
+                            </div>
+                        </a>
+                        
+                        <h1 class="hero-title">
+                            <span class="gradient-text">RASHID LEAKS</span>
+                        </h1>
+                        
+                        <p class="hero-subtitle">
+                            The premier adult video-sharing platform. Discover premium content from verified creators worldwide.
+                        </p>
+
+                        <div class="badge-18">
+                            🔞 18+ Adult Content Only
+                        </div>
+
+                        <div class="hero-cta">
+                            <button onclick="scrollToSection('featured')" class="btn-hero-primary">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                Start Watching
+                            </button>
+                            <button onclick="showAuthModal('register')" class="btn-hero-secondary" id="hero-register-btn">
+                                Create Free Account
+                            </button>
+                        </div>
+
+                        <div class="hero-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">50K+</div>
+                                <div class="stat-label">Videos</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">10K+</div>
+                                <div class="stat-label">Creators</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">1M+</div>
+                                <div class="stat-label">Users</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Featured Videos Section -->
+            <section id="featured" class="section">
+                <div class="container">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <svg class="text-orange-500" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            Featured Videos
+                        </h2>
+                        <a href="#trending" class="view-all-link">
+                            View All
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                    
+                    <div class="videos-scroll" id="featured-videos">
+                        <!-- Videos will be loaded here -->
+                        <div class="video-skeletons" id="featured-skeletons">
+                            <div class="video-card-skeleton"></div>
+                            <div class="video-card-skeleton"></div>
+                            <div class="video-card-skeleton"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Categories Section -->
+            <section id="categories" class="section section-dark">
+                <div class="container">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <svg class="text-blue-400" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                            </svg>
+                            Categories
+                        </h2>
+                        <a href="#" class="view-all-link">All Categories</a>
+                    </div>
+                    
+                    <div class="categories-grid" id="categories-grid">
+                        <!-- Categories will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Trending Videos Section -->
+            <section id="trending" class="section">
+                <div class="container">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <svg class="text-green-400" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+                            </svg>
+                            Trending Now
+                            <span class="badge-hot">🔥 Hot</span>
+                        </h2>
+                        <a href="#" class="view-all-link">View All</a>
+                    </div>
+                    
+                    <div class="videos-grid" id="trending-videos">
+                        <!-- Videos will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Creators Section -->
+            <section id="creators" class="section section-dark">
+                <div class="container">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <svg class="text-purple-400" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                            </svg>
+                            Popular Creators
+                        </h2>
+                        <a href="#" class="view-all-link">View All</a>
+                    </div>
+                    
+                    <div class="creators-grid" id="creators-grid">
+                        <!-- Creators will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- CTA Section -->
+            <section class="cta-section">
+                <div class="container text-center">
+                    <svg class="cta-icon" width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                    <h2 class="cta-title">Ready to Share Your Content?</h2>
+                    <p class="cta-subtitle">Join thousands of creators earning money on RASHID LEAKS. Upload your content and start building your audience today.</p>
+                    <div class="cta-buttons">
+                        <button onclick="showAuthModal('register')" class="btn-hero-primary">Start Uploading</button>
+                        <a href="#legal-guidelines" class="btn-hero-secondary">View Guidelines</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <div class="footer-logo">
+                            <span>RL</span>
+                        </div>
+                        <h3>RASHID LEAKS</h3>
+                        <p>Premium adult video-sharing platform for 18+ audiences.</p>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Navigation</h4>
+                        <a href="/">Home</a>
+                        <a href="#trending">Trending</a>
+                        <a href="#categories">Categories</a>
+                        <a href="#creators">Creators</a>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Legal</h4>
+                        <a href="#legal/terms">Terms of Service</a>
+                        <a href="#legal/privacy">Privacy Policy</a>
+                        <a href="#legal/dmca">DMCA</a>
+                        <a href="#legal/guidelines">Guidelines</a>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Support</h4>
+                        <a href="#contact">Contact Us</a>
+                        <a href="#reports">Report Content</a>
+                        <a href="#legal/18-plus-policy">18+ Policy</a>
+                        <a href="#legal/child-safety">Child Safety</a>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 RASHID LEAKS. All rights reserved.</p>
+                    <p class="footer-disclaimer">🔞 This website contains adult content. You must be 18 or older to access.</p>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Mobile Bottom Navigation -->
+        <nav class="mobile-nav">
+            <a href="/" class="mobile-nav-item active">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span>Home</span>
+            </a>
+            <a href="#trending" class="mobile-nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                    <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <span>Trending</span>
+            </a>
+            <button onclick="openSearch()" class="mobile-nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <span>Search</span>
+            </button>
+            <a href="#categories" class="mobile-nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                <span>Cats</span>
+            </a>
+            <div id="mobile-account-btn" class="mobile-nav-item" onclick="showAuthModal('login')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span>Account</span>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal hidden">
+        <div class="modal-overlay" onclick="closeAuthModal()"></div>
+        <div class="modal-content auth-modal-content">
+            <button onclick="closeAuthModal()" class="modal-close">&times;</button>
+            
+            <div id="login-form" class="auth-form">
+                <div class="auth-header">
+                    <div class="auth-logo">
+                        <span>RL</span>
+                    </div>
+                    <h2>Welcome Back</h2>
+                    <p>Sign in to your RASHID LEAKS account</p>
+                </div>
+                
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <div class="input-wrapper">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            <input type="email" id="login-email" placeholder="your@email.com" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <div class="input-wrapper">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <input type="password" id="login-password" placeholder="••••••••" required>
+                            <button type="button" onclick="togglePassword('login-password')" class="password-toggle">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="login-error" class="form-error hidden"></div>
+                    
+                    <button type="submit" class="btn-submit" id="login-submit-btn">
+                        Sign In
+                    </button>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="#" onclick="switchAuthForm('register')">Sign up</a></p>
+                </div>
+            </div>
+            
+            <div id="register-form" class="auth-form hidden">
+                <div class="auth-header">
+                    <div class="auth-logo">
+                        <span>RL</span>
+                    </div>
+                    <h2>Create Account</h2>
+                    <p>Join RASHID LEAKS to access premium content</p>
+                </div>
+                
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="reg-username">Username</label>
+                        <div class="input-wrapper">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <input type="text" id="reg-username" placeholder="Choose a username" required minlength="3" pattern="[a-zA-Z0-9_]+">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reg-email">Email</label>
+                        <div class="input-wrapper">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            <input type="email" id="reg-email" placeholder="your@email.com" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reg-password">Password</label>
+                        <div class="input-wrapper">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <input type="password" id="reg-password" placeholder="••••••••" required minlength="8">
+                            <button type="button" onclick="togglePassword('reg-password')" class="password-toggle">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reg-confirm-password">Confirm Password</label>
+                        <div class="input-wrapper">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <input type="password" id="reg-confirm-password" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="reg-18plus" required>
+                            <span>I confirm that I am at least 18 years old (or the age of majority in my jurisdiction)</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="reg-terms" required>
+                            <span>I agree to the <strong>Terms of Service</strong> and <strong>Community Guidelines</strong></span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="reg-privacy" required>
+                            <span>I agree to the <strong>Privacy Policy</strong> and consent to the processing of my personal data</span>
+                        </label>
+                    </div>
+                    
+                    <div id="register-error" class="form-error hidden"></div>
+                    
+                    <button type="submit" class="btn-submit" id="register-submit-btn">
+                        Create Account
+                    </button>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="#" onclick="switchAuthForm('login')">Sign in</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div id="search-modal" class="modal hidden">
+        <div class="modal-overlay" onclick="closeSearch()"></div>
+        <div class="modal-content search-modal-content">
+            <div class="search-header">
+                <h2>Search Videos</h2>
+                <button onclick="closeSearch()" class="modal-close">&times;</button>
+            </div>
+            <div class="search-input-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input type="text" id="search-input" placeholder="Search videos, creators, categories..." onkeyup="handleSearch(event)">
+            </div>
+            <div id="search-results" class="search-results"></div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
