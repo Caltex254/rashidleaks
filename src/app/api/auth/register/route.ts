@@ -49,58 +49,122 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
-    const existingUser = await db.user.findFirst({
-      where: {
-        OR: [
-          { email: email.toLowerCase() },
-          { username: username.toLowerCase() },
-        ],
-      },
-    });
+    console.log('Registration attempt:', { username, email });
 
-    if (existingUser) {
-      const field = existingUser.email === email.toLowerCase() ? 'Email' : 'Username';
+    // Check if user already exists
+    try {
+      const existingUser = await db.user.findFirst({
+        where: {
+          OR: [
+            { email: email.toLowerCase() },
+            { username: username.toLowerCase() },
+          ],
+        },
+      });
+
+      if (existingUser) {
+        const field = existingUser.email === email.toLowerCase() ? 'Email' : 'Username';
+        return NextResponse.json(
+          { success: false, error: `${field} is already in use` },
+          { status: 409 }
+        );
+      }
+    } catch (dbError) {
+      console.error('Database query error:', dbError);
       return NextResponse.json(
-        { success: false, error: `${field} is already in use` },
-        { status: 409 }
+        { success: false, error: 'Database connection error. Please try again.' },
+        { status: 500 }
       );
     }
 
     // Hash password with bcryptjs (same as login comparison uses)
-    const passwordHash = await hash(password, 12);
+    let passwordHash: string;
+    try {
+      passwordHash = await hash(password, 12);
+      console.log('Password hashed successfully');
+    } catch (hashError) {
+      console.error('Password hashing error:', hashError);
+      return NextResponse.json(
+        { success: false, error: 'Failed to process password. Please try again.' },
+        { status: 500 }
+      );
+    }
 
     // Create user
-    const user = await db.user.create({
-      data: {
-        username: username.toLowerCase(),
-        email: email.toLowerCase(),
-        passwordHash,
-        role: 'USER',
-        ageVerified: true, // Verified via 18+ checkbox confirmation
-        ageVerifiedAt: new Date(),
-      },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        displayName: true,
-        role: true,
-        createdAt: true,
-      },
-    });
+    let user;
+    try {
+      user = await db.user.create({
+        data: {
+          username: username.toLowerCase(),
+          email: email.toLowerCase(),
+          passwordHash,
+          role: 'USER',
+          ageVerified: true, // Verified via 18+ checkbox confirmation
+          ageVerifiedAt: new Date(),
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          displayName: true,
+          role: true,
+          createdAt: true,
+        },
+      });
+      console.log('User created successfully:', user.id);
+    } catch (createError) {
+      console.error('User creation error:', createError);
+      
+      // Handle unique constraint errors
+      if (createError instanceof Error && 'code' in createError && createError.code === 'P2002') {
+        return NextResponse.json(
+          { success: false, error: 'Username or email is already taken' },
+          { status: 409 }
+        );
+      }
+      
+      return NextResponse.json(
+        { success: false, error: 'Failed to create account. Database error occurred.' },
+        { status: 500 }
+      );
+    }
 
-    // Log registration
-    await db.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'user.register',
-        resourceType: 'User',
-        resourceId: user.id,
-        details: JSON.stringify({ method: 'email', ip: request.headers.get('x-forwarded-for') }),
-        success: true,
-      },
-    });
+    // Verify user was created by fetching it back
+    try {
+      const verifyUser = await db.user.findUnique({
+        where: { id: user.id },
+        select: { id: true, email: true, username: true },
+      });
+      
+      if (!verifyUser) {
+        console.error('CRITICAL: User creation reported success but user not found!');
+        return NextResponse.json(
+          { success: false, error: 'Account creation failed. Please try again.' },
+          { status: 500 }
+        );
+      }
+      
+      console.log('User verified in database:', verifyUser.email);
+    } catch (verifyError) {
+      console.error('User verification error:', verifyError);
+      // Continue anyway - user was likely created
+    }
+
+    // Log registration (non-critical)
+    try {
+      await db.auditLog.create({
+        data: {
+          userId: user.id,
+          action: 'user.register',
+          resourceType: 'User',
+          resourceId: user.id,
+          details: JSON.stringify({ method: 'email', ip: request.headers.get('x-forwarded-for') }),
+          success: true,
+        },
+      });
+    } catch (logError) {
+      console.error('Audit log error (non-critical):', logError);
+    }
 
     return NextResponse.json({
       success: true,
@@ -110,16 +174,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Registration error:', error);
     
-    // Handle unique constraint errors
-    if (error instanceof Error && 'code' in error && error.code === 'P2002') {
-      return NextResponse.json(
-        { success: false, error: 'Username or email is already taken' },
-        { status: 409 }
-      );
-    }
-
     return NextResponse.json(
-      { success: false, error: 'Failed to create account. Please try again.' },
+      { success: false, error: 'An unexpected error occurred. Please try again.' },
       { status: 500 }
     );
   }

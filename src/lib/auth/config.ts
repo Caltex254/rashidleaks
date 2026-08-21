@@ -18,6 +18,8 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Email and password are required');
         }
 
+        console.log('Login attempt for:', credentials.email);
+
         try {
           // Find user by email
           const user = await db.user.findUnique({
@@ -25,8 +27,11 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!user) {
+            console.log('User not found:', credentials.email);
             throw new Error('Invalid email or password');
           }
+
+          console.log('User found:', user.id, '- checking password...');
 
           // Check if user is banned
           if (user.isBanned) {
@@ -39,33 +44,53 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Verify password
-          const isValidPassword = await compare(credentials.password, user.passwordHash);
+          let isValidPassword: boolean;
+          try {
+            isValidPassword = await compare(credentials.password, user.passwordHash);
+            console.log('Password validation result:', isValidPassword);
+          } catch (compareError) {
+            console.error('Password comparison error:', compareError);
+            throw new Error('Authentication failed. Please try again.');
+          }
           
           if (!isValidPassword) {
+            console.log('Invalid password for user:', user.email);
+            
             // Increment failed login attempts
-            await db.user.update({
-              where: { id: user.id },
-              data: {
-                failedLoginAttempts: { increment: 1 },
-                // Lock account after 5 failed attempts
-                ...(user.failedLoginAttempts >= 4 && {
-                  lockedAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
-                }),
-              },
-            });
+            try {
+              await db.user.update({
+                where: { id: user.id },
+                data: {
+                  failedLoginAttempts: { increment: 1 },
+                  // Lock account after 5 failed attempts
+                  ...(user.failedLoginAttempts >= 4 && {
+                    lockedAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+                  }),
+                },
+              });
+            } catch (updateError) {
+              console.error('Failed to update login attempts:', updateError);
+            }
             
             throw new Error('Invalid email or password');
           }
 
+          console.log('Login successful for user:', user.email);
+
           // Reset failed login attempts on successful login
-          await db.user.update({
-            where: { id: user.id },
-            data: {
-              failedLoginAttempts: 0,
-              lockedAt: null,
-              lastLoginAt: new Date(),
-            },
-          });
+          try {
+            await db.user.update({
+              where: { id: user.id },
+              data: {
+                failedLoginAttempts: 0,
+                lockedAt: null,
+                lastLoginAt: new Date(),
+              },
+            });
+          } catch (updateError) {
+            console.error('Failed to reset login attempts:', updateError);
+            // Non-critical, continue with login
+          }
 
           return {
             id: user.id,
