@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Eye, EyeOff, Mail, Lock, User, Calendar, Globe, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,8 +19,6 @@ interface AuthFormData {
   email: string;
   password: string;
   confirmPassword?: string;
-  dateOfBirth?: string;
-  country?: string;
   agreeToTerms?: boolean;
   agreeToPrivacy?: boolean;
   confirm18Plus?: boolean;
@@ -33,12 +31,6 @@ interface AuthFormProps {
   error?: string | null;
 }
 
-const countries = [
-  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany',
-  'France', 'Netherlands', 'Spain', 'Italy', 'Brazil',
-  'Japan', 'Mexico', 'India', 'Other'
-];
-
 export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -49,8 +41,6 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
     ...(mode === 'register' && {
       username: '',
       confirmPassword: '',
-      dateOfBirth: '',
-      country: '',
       agreeToTerms: false,
       agreeToPrivacy: false,
       confirm18Plus: false,
@@ -88,19 +78,6 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
 
       if (formData.password !== formData.confirmPassword) {
         errors.confirmPassword = 'Passwords do not match';
-      }
-
-      if (!formData.dateOfBirth) {
-        errors.dateOfBirth = 'Date of birth is required';
-      } else {
-        const dob = new Date(formData.dateOfBirth);
-        const today = new Date();
-        const age = today.getFullYear() - dob.getFullYear();
-        const monthDiff = today.getMonth() - dob.getMonth();
-        
-        if (age < 18 || (age === 18 && monthDiff < 0)) {
-          errors.dateOfBirth = 'You must be at least 18 years old';
-        }
       }
 
       if (!formData.confirm18Plus) {
@@ -290,53 +267,6 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
               {localErrors.confirmPassword && (
                 <p className="text-xs text-red-400">{localErrors.confirmPassword}</p>
               )}
-            </div>
-          )}
-
-          {/* Date of Birth (Register Only) */}
-          {!isLogin && (
-            <div className="space-y-2">
-              <Label htmlFor="dateOfBirth" className="text-gray-300">Date of Birth</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                <Input
-                  id="dateOfBirth"
-                  type="date"
-                  value={formData.dateOfBirth}
-                  onChange={(e) => updateField('dateOfBirth', e.target.value)}
-                  className={cn(
-                    "pl-10 bg-white/5 border-white/10 text-white focus:border-red-500/50",
-                    localErrors.dateOfBirth && "border-red-500"
-                  )}
-                  max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                />
-              </div>
-              {localErrors.dateOfBirth && (
-                <p className="text-xs text-red-400">{localErrors.dateOfBirth}</p>
-              )}
-            </div>
-          )}
-
-          {/* Country (Register Only) */}
-          {!isLogin && (
-            <div className="space-y-2">
-              <Label htmlFor="country" className="text-gray-300">Country</Label>
-              <div className="relative">
-                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 z-10" />
-                <select
-                  id="country"
-                  value={formData.country}
-                  onChange={(e) => updateField('country', e.target.value)}
-                  className="w-full pl-10 pr-8 py-2 rounded-md bg-white/5 border border-white/10 text-white appearance-none cursor-pointer focus:border-red-500/50 focus:ring-red-500/20"
-                >
-                  <option value="" disabled>Select your country</option>
-                  {countries.map((country) => (
-                    <option key={country} value={country} className="bg-[#1a1a1a]">
-                      {country}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
           )}
 

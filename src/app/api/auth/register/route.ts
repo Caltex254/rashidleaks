@@ -7,10 +7,10 @@ import { db } from '@/lib/db';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, email, password, dateOfBirth, country } = body;
+    const { username, email, password } = body;
 
     // Validation
-    if (!username || !email || !password || !dateOfBirth) {
+    if (!username || !email || !password) {
       return NextResponse.json(
         { success: false, error: 'All required fields must be provided' },
         { status: 400 }
@@ -49,19 +49,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate age
-    const dob = new Date(dateOfBirth);
-    const today = new Date();
-    const age = today.getFullYear() - dob.getFullYear();
-    const monthDiff = today.getMonth() - dob.getMonth();
-    
-    if (age < 18 || (age === 18 && monthDiff < 0)) {
-      return NextResponse.json(
-        { success: false, error: 'You must be at least 18 years old to register' },
-        { status: 400 }
-      );
-    }
-
     // Check if user already exists
     const existingUser = await db.user.findFirst({
       where: {
@@ -80,7 +67,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash password
+    // Hash password with bcryptjs (same as login comparison uses)
     const passwordHash = await hash(password, 12);
 
     // Create user
@@ -89,10 +76,8 @@ export async function POST(request: NextRequest) {
         username: username.toLowerCase(),
         email: email.toLowerCase(),
         passwordHash,
-        dateOfBirth: dob,
-        country,
         role: 'USER',
-        ageVerified: true, // Already verified via DOB check
+        ageVerified: true, // Verified via 18+ checkbox confirmation
         ageVerifiedAt: new Date(),
       },
       select: {

@@ -8,6 +8,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MobileNav, MobileNavSpacer } from "@/components/layout/MobileNav";
 import { Providers } from "@/app/providers";
+import { SplashScreen } from "@/components/SplashScreen";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -98,6 +99,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0f0f0f] text-white min-h-screen flex flex-col`}
       >
         <Providers>
+          {/* Splash Screen - Shows for 3 seconds on initial load */}
+          <SplashScreen />
+          
           {/* Skip to main content for accessibility */}
           <a 
             href="#main-content" 

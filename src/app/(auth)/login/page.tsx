@@ -5,7 +5,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { useAuthStore } from '@/lib/store';
 
@@ -14,6 +14,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const { setUser } = useAuthStore();
+  const { data: session } = useSession();
   
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(
@@ -40,10 +41,27 @@ function LoginContent() {
       }
 
       if (result?.ok) {
-        // Fetch user data and update store
-        // For now, just redirect
-        const callbackUrl = searchParams.get('callbackUrl') || '/';
-        router.push(callbackUrl);
+        // Small delay to ensure session is available
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Check if user is admin and redirect to admin panel
+        if (result.user?.role === 'ADMIN' || result.user?.role === 'MODERATOR') {
+          // Update store with user info
+          setUser({
+            id: result.user.id,
+            email: result.user.email,
+            username: result.user.username,
+            displayName: result.user.name,
+            role: result.user.role,
+            avatar: result.user.image,
+            isAuthenticated: true,
+          });
+          router.push('/admin');
+        } else {
+          // Normal user redirect to home
+          const callbackUrl = searchParams.get('callbackUrl') || '/';
+          router.push(callbackUrl);
+        }
         router.refresh();
       }
     } catch (err) {

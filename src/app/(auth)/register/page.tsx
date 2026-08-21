@@ -5,7 +5,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { hash } from 'bcryptjs';
 import { AuthForm } from '@/components/auth/AuthForm';
 import type { AuthFormData } from '@/components/auth/AuthForm';
 
@@ -27,8 +26,6 @@ export default function RegisterPage() {
           username: data.username,
           email: data.email,
           password: data.password,
-          dateOfBirth: data.dateOfBirth,
-          country: data.country,
         }),
       });
 
