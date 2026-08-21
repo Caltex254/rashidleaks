@@ -15,7 +15,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email and password are required');
+          return null;
         }
 
         console.log('Login attempt for:', credentials.email);
@@ -28,19 +28,21 @@ export const authOptions: NextAuthOptions = {
 
           if (!user) {
             console.log('User not found:', credentials.email);
-            throw new Error('Invalid email or password');
+            return null;
           }
 
           console.log('User found:', user.id, '- checking password...');
 
           // Check if user is banned
           if (user.isBanned) {
-            throw new Error('Account has been banned');
+            console.log('Banned user attempted login:', user.email);
+            return null;
           }
 
-          // Check if account is locked
-          if (user.lockedAt && user.lockedAt > new Date()) {
-            throw new Error('Account temporarily locked. Please try again later.');
+          // Check if account is locked (using lockedUntil to match schema)
+          if (user.lockedUntil && user.lockedUntil > new Date()) {
+            console.log('Locked account attempted login:', user.email);
+            return null;
           }
 
           // Verify password
@@ -50,7 +52,7 @@ export const authOptions: NextAuthOptions = {
             console.log('Password validation result:', isValidPassword);
           } catch (compareError) {
             console.error('Password comparison error:', compareError);
-            throw new Error('Authentication failed. Please try again.');
+            return null;
           }
           
           if (!isValidPassword) {
@@ -64,7 +66,7 @@ export const authOptions: NextAuthOptions = {
                   failedLoginAttempts: { increment: 1 },
                   // Lock account after 5 failed attempts
                   ...(user.failedLoginAttempts >= 4 && {
-                    lockedAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+                    lockedUntil: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
                   }),
                 },
               });
@@ -72,7 +74,7 @@ export const authOptions: NextAuthOptions = {
               console.error('Failed to update login attempts:', updateError);
             }
             
-            throw new Error('Invalid email or password');
+            return null;
           }
 
           console.log('Login successful for user:', user.email);
@@ -83,7 +85,7 @@ export const authOptions: NextAuthOptions = {
               where: { id: user.id },
               data: {
                 failedLoginAttempts: 0,
-                lockedAt: null,
+                lockedUntil: null,
                 lastLoginAt: new Date(),
               },
             });
@@ -102,7 +104,7 @@ export const authOptions: NextAuthOptions = {
           };
         } catch (error) {
           console.error('Authorization error:', error);
-          throw error;
+          return null;
         }
       },
     }),

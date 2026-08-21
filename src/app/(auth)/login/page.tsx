@@ -25,46 +25,60 @@ function LoginContent() {
     setSubmitError(null);
 
     try {
+      console.log('Attempting sign in with:', data.email);
+      
       const result = await signIn('credentials', {
         email: data.email,
         password: data.password,
         redirect: false,
       });
 
+      console.log('Sign in result:', result);
+
+      // Check for errors first
       if (result?.error) {
-        setSubmitError(result.error === 'Account has been banned' 
-          ? 'This account has been banned.' 
-          : 'Invalid email or password. Please try again.'
-        );
+        console.log('Sign in error:', result.error);
+        setSubmitError('Invalid email or password. Please try again.');
         return;
       }
 
-      if (result?.ok) {
-        // Small delay to ensure session is available
-        await new Promise(resolve => setTimeout(resolve, 500));
+      // Check if result is ok and we have a user
+      if (result?.ok && result?.user) {
+        console.log('Sign in successful, user:', result.user);
         
-        // Check if user is admin and redirect to admin panel
-        if (result.user?.role === 'ADMIN' || result.user?.role === 'MODERATOR') {
-          // Update store with user info
-          setUser({
-            id: result.user.id,
-            email: result.user.email,
-            username: result.user.username,
-            displayName: result.user.name,
-            role: result.user.role,
-            avatar: result.user.image,
-            isAuthenticated: true,
-          });
+        // Small delay to ensure session is stored
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Update store with user info regardless of role
+        setUser({
+          id: result.user.id || '',
+          email: result.user.email || '',
+          username: result.user.username || '',
+          displayName: result.user.name || '',
+          role: result.user.role || 'USER',
+          avatar: result.user.image || null,
+          isAuthenticated: true,
+        });
+        
+        // Redirect based on role
+        if (result.user.role === 'ADMIN' || result.user.role === 'MODERATOR') {
+          console.log('Redirecting to admin panel...');
           router.push('/admin');
         } else {
-          // Normal user redirect to home
           const callbackUrl = searchParams.get('callbackUrl') || '/';
+          console.log('Redirecting to:', callbackUrl);
           router.push(callbackUrl);
         }
+        
+        // Refresh server components
         router.refresh();
+      } else {
+        // Handle case where result is not ok but no specific error
+        console.log('Sign in failed - no error but not ok:', result);
+        setSubmitError('Invalid email or password. Please try again.');
       }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('Login exception:', err);
       setSubmitError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
